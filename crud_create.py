@@ -25,5 +25,3 @@ session.commit()
 #delete
 session.delete(vb)
 session.commit()
-
-
