@@ -8,19 +8,19 @@ Base = declarative_base()
 
 class Shelter(Base):
     __tablename__ = 'shelter'
+
+    id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
     address = Column(String(160))
     city = Column(String(20))
     state = Column(String(20))
     zipCode = Column(String(10))
     website = Column(String)
-    id = Column(Integer, primary_key=True)
 
 
 class Puppy(Base):
     __tablename__ = 'puppy'
 
-    name = Column(String(80), nullable=False)
     id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
     dateOfBirth = Column(Date)
