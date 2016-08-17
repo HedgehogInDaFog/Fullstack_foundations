@@ -11,6 +11,12 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+@app.route('/')
+@app.route('/restaurants/')
+def restaurants():
+    restaurants = session.query(Restaurant)
+    return render_template('restaurants.html', restaurants=restaurants)
+
 
 @app.route('/restaurants/<int:restaurant_id>/')
 def restaurantMenu(restaurant_id):
