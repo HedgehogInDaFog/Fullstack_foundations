@@ -30,7 +30,7 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 @app.route('/')
-@app.route('/restaurant')
+@app.route('/restaurants/')
 def restaurants():
     restaurants = session.query(Restaurant)
     return render_template('restaurants.html', restaurants=restaurants)
@@ -196,9 +196,13 @@ def gconnect():
     return output
 
 
+
 @app.route('/gdisconnect')
 def gdisconnect():
-    access_token = login_session['access_token']
+    try:
+        access_token = login_session['access_token']
+    except:
+        access_token = None
     print 'In gdisconnect access token is %s', access_token
     print 'User name is: '
     print login_session['username']
@@ -225,6 +229,7 @@ def gdisconnect():
         response = make_response(json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
+
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
