@@ -30,6 +30,7 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 @app.route('/')
+@app.route('/restaurant/')
 @app.route('/restaurants/')
 def restaurants():
     restaurants = session.query(Restaurant)
@@ -58,6 +59,8 @@ def menuItemJSON(restaurant_id, menu_id):
 
 @app.route('/restaurant/<int:restaurant_id>/new/', methods=['GET', 'POST'])
 def newMenuItem(restaurant_id):
+    if 'username' not in login_session:
+        return redirect('/login')
     if request.method == 'POST':
         newItem = MenuItem(name=request.form['name'],
                            description=request.form['description'],
@@ -74,6 +77,8 @@ def newMenuItem(restaurant_id):
 
 @app.route('/restaurant/<int:restaurant_id>/<int:menu_id>/edit/', methods=['GET', 'POST'])
 def editMenuItem(restaurant_id, menu_id):
+    if 'username' not in login_session:
+        return redirect('/login')
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
     item = session.query(MenuItem).filter_by(restaurant_id=restaurant.id, id=menu_id).one()
     if request.method == 'POST':
@@ -94,6 +99,8 @@ def editMenuItem(restaurant_id, menu_id):
 
 @app.route('/restaurant/<int:restaurant_id>/<int:menu_id>/delete/', methods=['GET', 'POST'])
 def deleteMenuItem(restaurant_id, menu_id):
+    if 'username' not in login_session:
+        return redirect('/login')
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
     item = session.query(MenuItem).filter_by(restaurant_id=restaurant.id, id=menu_id).one()
     if request.method == 'POST':
@@ -196,14 +203,12 @@ def gconnect():
     return output
 
 
-
 @app.route('/gdisconnect')
 def gdisconnect():
-    try:
-        access_token = login_session['access_token']
-    except:
-        access_token = None
-    print 'In gdisconnect access token is %s', access_token
+
+    access_token = login_session.get('credentials') #.access_token #['access_token']
+
+    print('In gdisconnect access token is %s' % access_token)
     print 'User name is: '
     print login_session['username']
     if access_token is None:
@@ -211,13 +216,13 @@ def gdisconnect():
         response = make_response(json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     print 'result is '
     print result
     if result['status'] == '200':
-        del login_session['access_token']
+        del login_session['credentials']
         del login_session['gplus_id']
         del login_session['username']
         del login_session['email']
