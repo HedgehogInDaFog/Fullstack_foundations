@@ -23,7 +23,7 @@ APPLICATION_NAME = "Restaurant menu app"
 
 app = Flask(__name__)
 
-engine = create_engine('sqlite:///restaurantmenu.db')
+engine = create_engine('sqlite:///restaurantmenuwithusers.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
@@ -56,16 +56,24 @@ def getUserID(email):
 @app.route('/')
 @app.route('/restaurant/')
 @app.route('/restaurants/')
-def restaurants():
+def showRestaurants():
     restaurants = session.query(Restaurant)
-    return render_template('restaurants.html', restaurants=restaurants)
+    if 'username' not in login_session:
+        return render_template('publicrestaurants.html', restaurants=restaurants)
+    else:
+        return render_template('restaurants.html', restaurants=restaurants)
 
 
 @app.route('/restaurants/<int:restaurant_id>/')
 def restaurantMenu(restaurant_id):
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
+    creator = getUserInfo(restaurant.user_id)
     items = session.query(MenuItem).filter_by(restaurant_id=restaurant.id)
-    return render_template('menu.html', restaurant=restaurant, items=items)
+
+    if 'username' not in login_session or creator.id != login_session['user_id']:
+        return render_template('publicmenu.html', restaurant=restaurant, items=items)
+    else:
+        return render_template('menu.html', restaurant=restaurant, items=items)
 
 
 @app.route('/restaurants/<int:restaurant_id>/menu/JSON')
@@ -143,6 +151,8 @@ def deleteMenuItem(restaurant_id, menu_id):
     if 'username' not in login_session:
         return redirect('/login')
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
+    if restaurant.user_id != login_session['user_id']:
+        return "You are not Authorized!"
     item = session.query(MenuItem).filter_by(restaurant_id=restaurant.id, id=menu_id).one()
     if request.method == 'POST':
         session.delete(item)
